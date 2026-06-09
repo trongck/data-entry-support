@@ -66,7 +66,7 @@ export default function TrangChu() {
 
   if (!nguoiDung) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA] px-4 font-sans">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] px-4 font-sans">
         <div className="w-full max-w-sm bg-white border border-[#E5E7EB] p-8 shadow-[0_1px_3px_rgba(0,0,0,0.08)] flex flex-col gap-6">
           <div className="text-center flex flex-col gap-1.5">
             <h1 className="text-xl font-bold text-[#1A1A2E]">ĐĂNG NHẬP HỆ THỐNG</h1>
@@ -110,6 +110,9 @@ export default function TrangChu() {
             </button>
           </form>
         </div>
+        <p className="mt-6 text-[11px] text-[#9CA3AF]">
+          © {new Date().getFullYear()} Developed by <span className="text-[#2563EB] font-semibold">Nguyễn Văn Trọng</span>
+        </p>
       </div>
     );
   }

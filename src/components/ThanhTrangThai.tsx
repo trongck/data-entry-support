@@ -19,8 +19,11 @@ export default function ThanhTrangThai() {
         <span>Tổng số dòng: <strong className="text-[#1A1A2E]">{duLieu.length}</strong></span>
         <span>Đang chọn: <strong className="text-[#1A1A2E]">{hangDangChon.size}</strong></span>
       </div>
-      <div>
-        <span>Lưu lịch sử cuối: <strong>{lastSaved}</strong></span>
+      <div className="flex items-center gap-1.5">
+        <span>© {new Date().getFullYear()}</span>
+        <span className="text-[#2563EB] font-semibold">Nguyễn Văn Trọng</span>
+        <span className="mx-1 text-[#D1D5DB]">|</span>
+        <span>Lưu cuối: <strong>{lastSaved}</strong></span>
       </div>
     </footer>
   );
