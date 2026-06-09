@@ -165,7 +165,7 @@ cd Du_an_nhap_lieu_kho
 npm install
 
 # 3. Tạo file biến môi trường
-cp .env.local
+cp .env.example .env.local
 # Sau đó mở .env.local và điền thông tin cấu hình (xem phần bên dưới)
 
 # 4. Chạy server phát triển
