@@ -31,11 +31,25 @@ export default function TrangChu() {
     khoiPhucNguoiDung();
   }, [khoiPhucNguoiDung]);
 
+  // Handle responsive sidebar behavior on client side
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setCoThuGonSidebar(false);
+      } else {
+        setCoThuGonSidebar(true);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Login form states
   const [maForm, setMaForm] = useState('');
   const [passForm, setPassForm] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [coThuGonSidebar, setCoThuGonSidebar] = useState(false);
+  const [coThuGonSidebar, setCoThuGonSidebar] = useState(true);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +141,7 @@ export default function TrangChu() {
 
       {/* Main Body (Sidebar + Content area) */}
       <div className="flex-grow flex overflow-hidden">
-        <ThanhBen coThuGon={coThuGonSidebar} />
+        <ThanhBen coThuGon={coThuGonSidebar} onClose={() => setCoThuGonSidebar(true)} />
         
         <main className="flex-1 p-4 md:p-6 overflow-y-auto lg:overflow-hidden flex flex-col relative bg-white">
           {renderWorkflowPanel()}

@@ -355,7 +355,7 @@ export default function QuetPhieuLienTuc() {
           ) : (
             <div className="flex flex-col gap-2">
               <div className="relative rounded-lg overflow-hidden border border-gray-300 bg-black">
-                <video ref={videoRef} autoPlay playsInline muted className="w-full h-44 object-cover" />
+                <video ref={videoRef} autoPlay playsInline muted className="w-full h-48 sm:h-56 md:h-64 object-cover" />
                 <div className="absolute inset-0 pointer-events-none">
                   <div className="absolute top-2 left-2 w-5 h-5 border-t-2 border-l-2 border-emerald-400" />
                   <div className="absolute top-2 right-2 w-5 h-5 border-t-2 border-r-2 border-emerald-400" />

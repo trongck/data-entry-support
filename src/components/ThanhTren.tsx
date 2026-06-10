@@ -59,31 +59,32 @@ export default function ThanhTren({ onToggleSidebar }: ThanhTrenProps) {
             <Menu className="w-5 h-5 text-[#1A1A2E]" />
           </button>
           <div className="flex items-center gap-2 font-bold text-sm text-[#1A1A2E]">
-            <Database className="w-5 h-5 text-indigo-600" />
-            <span className="tracking-wide">KHO DỮ LIỆU EXCEL ĐA NĂNG CỦA TRỌNG</span>
+            <Database className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+            <span className="tracking-wide hidden md:inline">KHO DỮ LIỆU EXCEL ĐA NĂNG CỦA TRỌNG</span>
+            <span className="tracking-wide md:hidden">NHẬP LIỆU KHO</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* AI Configuration Button */}
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg transition border border-indigo-100"
+            className="flex items-center gap-1.5 px-2 py-1.5 sm:px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg transition border border-indigo-100"
             title="Cấu hình API Key & Model Gemini"
           >
             <Settings className="w-4 h-4 animate-spin-slow" />
-            <span>Cấu hình AI</span>
+            <span className="hidden sm:inline">Cấu hình AI</span>
           </button>
 
           <div className="h-4 w-[1px] bg-gray-200" />
 
           {/* User profile */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-1.5 font-bold text-xs text-[#1A1A2E]">
-              <div className="w-6 h-6 rounded-full bg-indigo-600/10 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-indigo-600/10 flex items-center justify-center flex-shrink-0">
                 <User className="w-3.5 h-3.5 text-indigo-600" />
               </div>
-              <span>{nguoiDung?.ten || 'Trọng'}</span>
+              <span className="hidden sm:inline">{nguoiDung?.ten || 'Trọng'}</span>
             </div>
             
             <button
