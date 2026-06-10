@@ -25,11 +25,12 @@ export default function QuetPhieuLienTuc() {
   // === WORKFLOW STATE (persisted in localStorage) ===
   const [buoc, setBuoc] = useState<'phieu-can' | 'phieu-xuat'>('phieu-can');
   const [phieuCanInfo, setPhieuCanInfo] = useState({ ngay: '', bienSo: '', laiXe: '' });
-  const [phieuXuatList, setPhieuXuatList] = useState<{ soPhieu: string; tenSanPham: string; soLuong: string; msl: string }[]>([]);
+  const [phieuXuatList, setPhieuXuatList] = useState<{ id?: string; soPhieu: string; tenSanPham: string; soLuong: string; msl: string; dangQuet?: boolean }[]>([]);
   const [ketQuaList, setKetQuaList] = useState<DongDuLieu[]>([]);
   
   // UI states
   const [dangQuet, setDangQuet] = useState(false);
+  const [phieuCanDangQuet, setPhieuCanDangQuet] = useState(false);
   const [trangThaiQuet, setTrangThaiQuet] = useState('');
   const [daKhoiPhuc, setDaKhoiPhuc] = useState(false);
 
@@ -169,58 +170,112 @@ export default function QuetPhieuLienTuc() {
 
   // === SEND TO AI ===
   const guiQuetAI = async (imageBase64: string) => {
-    setDangQuet(true);
-    setTrangThaiQuet(buoc === 'phieu-can' ? 'Đang đọc phiếu cân...' : 'Đang đọc phiếu xuất...');
-    try {
-      const res = await fetch('/api/scan-phieu', {
+    // Save current step because it might change immediately
+    const currentBuoc = buoc;
+
+    if (currentBuoc === 'phieu-can') {
+      // Advance step to 'phieu-xuat' IMMEDIATELY so the user can start scanning export tickets
+      setBuoc('phieu-xuat');
+      setPhieuCanDangQuet(true);
+      setPhieuCanInfo({ ngay: 'Đang quét...', bienSo: 'Đang quét...', laiXe: 'Đang quét...' });
+      setThongBao({ loai: 'thanh-cong', noiDung: 'Đang nhận dạng phiếu cân ngầm dưới nền...' });
+
+      // Run fetching in background
+      fetch('/api/scan-phieu', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(customApiKey ? { 'x-gemini-api-key': customApiKey } : {}),
           ...(customModel ? { 'x-gemini-model': customModel } : {}),
         },
-        body: JSON.stringify({ imageBase64, loaiPhieu: buoc }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Lỗi');
-
-      const kq = data.ketQua;
-
-      if (buoc === 'phieu-can') {
+        body: JSON.stringify({ imageBase64, loaiPhieu: 'phieu-can' }),
+      })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Lỗi nhận dạng phiếu cân');
+        const kq = data.ketQua;
         setPhieuCanInfo({ ngay: kq.ngay || '', bienSo: kq.bienSo || '', laiXe: kq.laiXe || '' });
-        setBuoc('phieu-xuat');
-        setThongBao({ loai: 'thanh-cong', noiDung: `Đọc phiếu cân: ${kq.bienSo || '?'} - ${kq.ngay || '?'}` });
-      } else {
-        // phieu-xuat: can have multiple lines
+        setThongBao({ loai: 'thanh-cong', noiDung: `✅ Đọc xong phiếu cân: ${kq.bienSo || '?'}` });
+      })
+      .catch(err => {
+        setPhieuCanInfo({ ngay: 'Lỗi quét', bienSo: 'Lỗi quét', laiXe: 'Lỗi quét' });
+        setThongBao({ loai: 'loi', noiDung: `❌ Lỗi đọc phiếu cân: ${err.message}` });
+      })
+      .finally(() => {
+        setPhieuCanDangQuet(false);
+      });
+
+    } else {
+      // For export tickets
+      const placeholderId = Math.random().toString();
+      
+      // Add a loading placeholder immediately
+      const placeholderItem = {
+        id: placeholderId,
+        soPhieu: 'Đang quét...',
+        tenSanPham: 'Đang nhận dạng ngầm...',
+        soLuong: '...',
+        msl: '',
+        dangQuet: true
+      };
+      
+      setPhieuXuatList(prev => [...prev, placeholderItem]);
+      setThongBao({ loai: 'thanh-cong', noiDung: 'Đang nhận dạng phiếu xuất ngầm dưới nền...' });
+
+      // Run fetching in background
+      fetch('/api/scan-phieu', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(customApiKey ? { 'x-gemini-api-key': customApiKey } : {}),
+          ...(customModel ? { 'x-gemini-model': customModel } : {}),
+        },
+        body: JSON.stringify({ imageBase64, loaiPhieu: 'phieu-xuat' }),
+      })
+      .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Lỗi nhận dạng phiếu xuất');
+        const kq = data.ketQua;
         const ds = kq.danhSach || [kq];
         const newItems = ds.map((item: any) => {
           let sl = String(item.soLuong || '').trim();
-          // Fallback cleanup: remove trailing 3 zeros if present
-          if (sl.endsWith('000')) {
-            sl = sl.slice(0, -3);
-          }
+          if (sl.endsWith('000')) sl = sl.slice(0, -3);
           
           let sp = String(item.soPhieu || '').trim();
-          // Keep only the last 5 characters of the ticket number
-          if (sp.length > 5) {
-            sp = sp.slice(-5);
-          }
+          if (sp.length > 5) sp = sp.slice(-5);
 
           return {
+            id: Math.random().toString(),
             soPhieu: sp,
             tenSanPham: item.tenSanPham || '',
             soLuong: sl,
-            msl: ''
+            msl: '',
+            dangQuet: false
           };
         });
-        setPhieuXuatList(prev => [...prev, ...newItems]);
-        setThongBao({ loai: 'thanh-cong', noiDung: ` Đọc ${newItems.length} dòng phiếu xuất` });
-      }
-    } catch (err: any) {
-      setThongBao({ loai: 'loi', noiDung: err.message });
-    } finally {
-      setDangQuet(false);
-      setTrangThaiQuet('');
+
+        // Replace placeholder with results
+        setPhieuXuatList(prev => {
+          const idx = prev.findIndex(item => item.id === placeholderId);
+          if (idx !== -1) {
+            const copy = [...prev];
+            copy.splice(idx, 1, ...newItems);
+            return copy;
+          }
+          return [...prev, ...newItems];
+        });
+        setThongBao({ loai: 'thanh-cong', noiDung: `✅ Đọc xong ${newItems.length} dòng phiếu xuất` });
+      })
+      .catch(err => {
+        // Mark placeholder as failed
+        setPhieuXuatList(prev => prev.map(item => {
+          if (item.id === placeholderId) {
+            return { ...item, soPhieu: 'Lỗi', tenSanPham: 'Lỗi quét ảnh', soLuong: '!', dangQuet: false };
+          }
+          return item;
+        }));
+        setThongBao({ loai: 'loi', noiDung: `❌ Lỗi quét phiếu xuất: ${err.message}` });
+      });
     }
   };
 
@@ -308,31 +363,34 @@ export default function QuetPhieuLienTuc() {
         {buoc === 'phieu-xuat' && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-blue-500 uppercase">Phiếu cân hiện tại</span>
+              <span className="text-[10px] font-bold text-blue-500 uppercase flex items-center gap-1">
+                {phieuCanDangQuet && <div className="w-2.5 h-2.5 border border-blue-500 border-t-transparent rounded-full animate-spin" />}
+                Phiếu cân hiện tại {phieuCanDangQuet && '(Đang quét...)'}
+              </span>
               <button onClick={() => {
                 setBuoc('phieu-can');
                 setPhieuCanInfo({ ngay: '', bienSo: '', laiXe: '' });
                 setPhieuXuatList([]);
                 setThongBao({ loai: 'canh-bao', noiDung: 'Đã hủy phiếu cân. Hãy scan lại phiếu cân mới.' });
               }} className="flex items-center gap-1 text-[10px] font-bold text-red-500 hover:text-red-700 hover:bg-red-100 px-2 py-0.5 rounded transition">
-                <RotateCcw className="w-3 h-3" /> Quét lại phiếu cân
+                <RotateCcw className="w-3 h-3" /> Quét lại
               </button>
             </div>
             <div className="grid grid-cols-3 gap-1.5">
               <div>
                 <span className="text-[9px] text-gray-400">Ngày</span>
-                <input value={phieuCanInfo.ngay} onChange={e => setPhieuCanInfo(p => ({...p, ngay: e.target.value}))}
-                  className="w-full text-xs font-bold border border-blue-200 rounded px-1.5 py-1 bg-white" />
+                <input value={phieuCanInfo.ngay} onChange={e => setPhieuCanInfo(p => ({...p, ngay: e.target.value}))} disabled={phieuCanDangQuet}
+                  className="w-full text-xs font-bold border border-blue-200 rounded px-1.5 py-1 bg-white disabled:bg-gray-50" />
               </div>
               <div>
                 <span className="text-[9px] text-gray-400">Biển số</span>
-                <input value={phieuCanInfo.bienSo} onChange={e => setPhieuCanInfo(p => ({...p, bienSo: e.target.value}))}
-                  className="w-full text-xs font-bold border border-blue-200 rounded px-1.5 py-1 bg-white" />
+                <input value={phieuCanInfo.bienSo} onChange={e => setPhieuCanInfo(p => ({...p, bienSo: e.target.value}))} disabled={phieuCanDangQuet}
+                  className="w-full text-xs font-bold border border-blue-200 rounded px-1.5 py-1 bg-white disabled:bg-gray-50" />
               </div>
               <div>
                 <span className="text-[9px] text-gray-400">Lái xe</span>
-                <input value={phieuCanInfo.laiXe} onChange={e => setPhieuCanInfo(p => ({...p, laiXe: e.target.value}))}
-                  className="w-full text-xs font-bold border border-blue-200 rounded px-1.5 py-1 bg-white" />
+                <input value={phieuCanInfo.laiXe} onChange={e => setPhieuCanInfo(p => ({...p, laiXe: e.target.value}))} disabled={phieuCanDangQuet}
+                  className="w-full text-xs font-bold border border-blue-200 rounded px-1.5 py-1 bg-white disabled:bg-gray-50" />
               </div>
             </div>
           </div>
@@ -372,9 +430,9 @@ export default function QuetPhieuLienTuc() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={chupVaQuet} disabled={dangQuet}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition disabled:opacity-50">
-                  <Zap className="w-4 h-4" /> {dangQuet ? 'ĐANG QUÉT...' : 'CHỤP & QUÉT'}
+                <button onClick={chupVaQuet}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">
+                  <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" /> CHỤP & QUÉT LIÊN TỤC
                 </button>
                 <button onClick={tatCamera} className="px-3 py-2.5 border border-red-200 hover:bg-red-50 text-red-500 rounded-lg transition">
                   <X className="w-4 h-4" />
@@ -390,17 +448,17 @@ export default function QuetPhieuLienTuc() {
           <span className="text-[10px] font-bold text-gray-400">HOẶC</span>
           <div className="flex-1 h-px bg-gray-200" />
         </div>
-        <button onClick={() => fileInputRef.current?.click()} disabled={dangQuet}
-          className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-gray-300 hover:border-emerald-400 text-gray-600 text-xs font-bold rounded-lg transition disabled:opacity-50">
+        <button onClick={() => fileInputRef.current?.click()}
+          className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-gray-300 hover:border-emerald-400 text-gray-600 text-xs font-bold rounded-lg transition">
           <Image className="w-4 h-4" /> Chọn ảnh {buoc === 'phieu-can' ? 'phiếu cân' : 'phiếu xuất'}
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={chonFile} className="hidden" />
 
         {/* Processing indicator */}
-        {dangQuet && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-            <div className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-[11px] font-bold text-amber-700">{trangThaiQuet}</span>
+        {(phieuCanDangQuet || phieuXuatList.some(p => p.dangQuet)) && (
+          <div className="flex items-center gap-2 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+            <span className="text-[11px] font-bold text-amber-700">Đang nhận dạng dữ liệu ngầm dưới nền...</span>
           </div>
         )}
 
@@ -408,28 +466,35 @@ export default function QuetPhieuLienTuc() {
         {buoc === 'phieu-xuat' && phieuXuatList.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-lg p-3 flex flex-col gap-2">
             <span className="text-[10px] font-bold text-gray-400 uppercase">Phiếu xuất đã scan ({phieuXuatList.length})</span>
-            {phieuXuatList.map((px, i) => (
-              <div key={i} className="flex flex-col gap-1.5 border-b border-gray-100 pb-2 last:border-b-0 last:pb-0">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400 font-bold">Dòng {i + 1}</span>
-                  <button onClick={() => xoaPhieuXuat(i)} className="text-red-400 hover:text-red-600 p-0.5">
-                    <X className="w-3 h-3" />
-                  </button>
+            <div className="flex flex-col gap-2 max-h-64 overflow-y-auto pr-1">
+              {phieuXuatList.map((px, i) => (
+                <div key={px.id || i} className={`flex flex-col gap-1.5 border-b border-gray-100 pb-2 last:border-b-0 last:pb-0 ${
+                  px.dangQuet ? 'opacity-70 bg-amber-50/20 p-1.5 rounded border border-dashed border-amber-200' : ''
+                }`}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400 font-bold flex items-center gap-1">
+                      {px.dangQuet && <div className="w-2.5 h-2.5 border border-amber-500 border-t-transparent rounded-full animate-spin" />}
+                      Dòng {i + 1} {px.dangQuet && '(Đang quét...)'}
+                    </span>
+                    <button onClick={() => xoaPhieuXuat(i)} className="text-red-400 hover:text-red-600 p-0.5" disabled={px.dangQuet}>
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <input value={px.soPhieu} onChange={e => suaPhieuXuat(i, 'soPhieu', e.target.value)} placeholder="Số phiếu" disabled={px.dangQuet}
+                      className="border border-gray-200 rounded px-1.5 py-1 text-xs disabled:bg-gray-50 font-bold" />
+                    <input value={px.tenSanPham} onChange={e => suaPhieuXuat(i, 'tenSanPham', e.target.value)} placeholder="Tên sản phẩm" disabled={px.dangQuet}
+                      className="border border-gray-200 rounded px-1.5 py-1 text-xs disabled:bg-gray-50" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <input value={px.soLuong} onChange={e => suaPhieuXuat(i, 'soLuong', e.target.value)} placeholder="Số lượng" disabled={px.dangQuet}
+                      className="border border-gray-200 rounded px-1.5 py-1 text-xs text-center disabled:bg-gray-50 font-bold" />
+                    <input value={px.msl} onChange={e => suaPhieuXuat(i, 'msl', e.target.value)} placeholder="MSL (tự điền)" disabled={px.dangQuet}
+                      className="border border-amber-300 rounded px-1.5 py-1 text-xs text-center bg-amber-50 disabled:bg-gray-100" />
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <input value={px.soPhieu} onChange={e => suaPhieuXuat(i, 'soPhieu', e.target.value)} placeholder="Số phiếu"
-                    className="border border-gray-200 rounded px-1.5 py-1 text-xs" />
-                  <input value={px.tenSanPham} onChange={e => suaPhieuXuat(i, 'tenSanPham', e.target.value)} placeholder="Tên sản phẩm"
-                    className="border border-gray-200 rounded px-1.5 py-1 text-xs" />
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <input value={px.soLuong} onChange={e => suaPhieuXuat(i, 'soLuong', e.target.value)} placeholder="Số lượng"
-                    className="border border-gray-200 rounded px-1.5 py-1 text-xs text-center" />
-                  <input value={px.msl} onChange={e => suaPhieuXuat(i, 'msl', e.target.value)} placeholder="MSL (tự điền)"
-                    className="border border-amber-300 rounded px-1.5 py-1 text-xs text-center bg-amber-50" />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
