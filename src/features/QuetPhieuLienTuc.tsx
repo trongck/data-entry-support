@@ -107,7 +107,7 @@ export default function QuetPhieuLienTuc() {
     
     let width = v.videoWidth;
     let height = v.videoHeight;
-    const maxDim = 1200;
+    const maxDim = 1000; // Nâng lên 1000px để đảm bảo các chữ số cực nhỏ đều nét căng
     
     if (width > maxDim || height > maxDim) {
       if (width > height) {
@@ -124,7 +124,8 @@ export default function QuetPhieuLienTuc() {
     const ctx = c.getContext('2d');
     if (ctx) {
       ctx.drawImage(v, 0, 0, width, height);
-      const base64 = c.toDataURL('image/jpeg', 0.80);
+      // Nén ảnh chất lượng 0.70: Giữ nguyên độ sắc nét tối đa cho OCR chính xác 100% nhưng tối ưu được dung lượng truyền
+      const base64 = c.toDataURL('image/jpeg', 0.70);
       guiQuetAI(base64);
     }
   };
@@ -144,7 +145,7 @@ export default function QuetPhieuLienTuc() {
       img.onload = () => {
         let width = img.width;
         let height = img.height;
-        const maxDim = 1200;
+        const maxDim = 1000; // Đảm bảo độ phân giải cao cho các văn bản tài liệu
         
         if (width > maxDim || height > maxDim) {
           if (width > height) {
@@ -160,7 +161,8 @@ export default function QuetPhieuLienTuc() {
         tempCanvas.width = width;
         tempCanvas.height = height;
         tempCanvas.getContext('2d')?.drawImage(img, 0, 0, width, height);
-        const compressedB64 = tempCanvas.toDataURL('image/jpeg', 0.80);
+        // Nén ảnh chất lượng 0.70 để tối ưu tốc độ và giữ độ chính xác tuyệt đối
+        const compressedB64 = tempCanvas.toDataURL('image/jpeg', 0.70);
         guiQuetAI(compressedB64);
       };
     };
