@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useKhoLuuTru } from '../store/khoLuuTru';
-import { Image, FileCode, FileText, CheckSquare } from 'lucide-react';
+import { Image, FileCode, FileText, CheckSquare, ScanLine } from 'lucide-react';
 
 interface ThanhBenProps {
   coThuGon: boolean;
@@ -12,6 +12,7 @@ export default function ThanhBen({ coThuGon }: ThanhBenProps) {
   const { giaoDienHienTai, chuyenPhanHe } = useKhoLuuTru();
 
   const danhSachChucNang = [
+    { id: 'quet-phieu', ten: 'Quét Phiếu Liên Tục', Icon: ScanLine },
     { id: 'chuyen-anh', ten: 'Chuyển Ảnh thành Excel', Icon: Image },
     { id: 'doc-json', ten: 'Đọc dữ liệu JSON', Icon: FileCode },
     { id: 'nhap-pdf', ten: 'Nhập từ PDF sang Excel', Icon: FileText },

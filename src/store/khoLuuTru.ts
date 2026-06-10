@@ -59,7 +59,7 @@ export const useKhoLuuTru = create<TrangThaiCuaHang>((set, get) => ({
   lichSu: [],
   chiSoLichSu: -1,
   nguoiDung: null,
-  giaoDienHienTai: 'chuyen-anh',
+  giaoDienHienTai: 'quet-phieu',
   chieuRongCot: HANG_SO_COT.reduce((acc, cot) => {
     acc[cot.id] = cot.rong;
     return acc;
@@ -103,6 +103,7 @@ export const useKhoLuuTru = create<TrangThaiCuaHang>((set, get) => ({
   dangXuat: () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('nguoiDung');
+      localStorage.removeItem('scanData');
     }
     set({ nguoiDung: null, duLieu: [], lichSu: [], chiSoLichSu: -1, hangDangChon: new Set() });
   },

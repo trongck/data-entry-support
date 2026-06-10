@@ -88,7 +88,21 @@ export function xuatExcelNhanVien(
   XLSX.utils.book_append_sheet(wb, wsThongKe, "Báo cáo Tổng hợp");
 
   const dateStr = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `Bao_Cao_Excel_${dateStr}.xlsx`);
+  const filename = `Bao_Cao_Excel_${dateStr}.xlsx`;
+  try {
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('Lỗi khi ghi file excel:', err);
+  }
 }
 
 export function gopDuLieuNhanVien(
@@ -165,7 +179,26 @@ export function xuatExcelBangDauRa(duLieu: any[], danhSachCot: string[]): void {
     wsData['!cols'] = colsConfig;
     XLSX.utils.book_append_sheet(wb, wsData, "Dữ liệu");
     const filename = `Xuat_Du_Lieu_${new Date().toISOString().slice(0, 10)}_${Math.floor(Math.random() * 1000)}.xlsx`;
-    XLSX.writeFile(wb, filename);
+    
+    // Create hidden form to submit POST request and trigger native download
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/export-excel';
+    form.style.display = 'none';
+
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'payload';
+    input.value = JSON.stringify({
+      duLieu: duLieuExcelFormat,
+      danhSachCot,
+      filename
+    });
+
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
   } catch (error) {
     console.error('Lỗi xuất Excel:', error);
   }

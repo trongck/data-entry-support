@@ -12,6 +12,7 @@ import ChuyenAnhExcel from '../features/ChuyenAnhExcel';
 import DocJsonExcel from '../features/DocJsonExcel';
 import NhapPdfExcel from '../features/NhapPdfExcel';
 import ChuanHoaDuLieu from '../features/ChuanHoaDuLieu';
+import QuetPhieuLienTuc from '../features/QuetPhieuLienTuc';
 
 export default function TrangChu() {
   const { 
@@ -51,6 +52,8 @@ export default function TrangChu() {
   // Render correct workflow panel
   const renderWorkflowPanel = () => {
     switch (giaoDienHienTai) {
+      case 'quet-phieu':
+        return <QuetPhieuLienTuc />;
       case 'chuyen-anh':
         return <ChuyenAnhExcel />;
       case 'doc-json':
@@ -60,7 +63,7 @@ export default function TrangChu() {
       case 'chuan-hoa':
         return <ChuanHoaDuLieu />;
       default:
-        return <ChuyenAnhExcel />;
+        return <QuetPhieuLienTuc />;
     }
   };
 
@@ -126,7 +129,7 @@ export default function TrangChu() {
       <div className="flex-grow flex overflow-hidden">
         <ThanhBen coThuGon={coThuGonSidebar} />
         
-        <main className="flex-1 p-6 overflow-hidden flex flex-col relative bg-white">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto lg:overflow-hidden flex flex-col relative bg-white">
           {renderWorkflowPanel()}
 
           {/* Progress Overlay Indicator */}
