@@ -51,6 +51,8 @@ Hãy trả về một đối tượng JSON khớp chính xác cấu trúc sau:
     } else {
       prompt = `Bạn là một chuyên gia phân tích ảnh và trích xuất dữ liệu chính xác tuyệt đối. Hãy đọc PHIẾU XUẤT KHO hoặc LỆNH XUẤT KHO trong ảnh.
 
+LƯU Ý QUAN TRỌNG: Trên phiếu này có các chữ viết tay nét mỏng viết bằng bút mực xanh/đen (ví dụ: "TX 5", "TX 60", "TX 50"...). Hãy tập trung phân tích kỹ từng chi tiết nhỏ của điểm ảnh để nhận dạng đúng các chữ viết tay này và tránh bỏ sót bất kỳ dòng nào có chữ viết tay bổ sung.
+
 Quy tắc nhận diện bắt buộc:
 
 1. MÃ PHIẾU GÓC TRÊN CÙNG BÊN PHẢI (Số phiếu của cả tờ Lệnh xuất kho):
