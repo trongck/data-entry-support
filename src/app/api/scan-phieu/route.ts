@@ -38,35 +38,49 @@ export async function POST(req: NextRequest) {
 Hãy tìm và nhận diện chính xác các trường sau:
 1. Ngày cân (định dạng dd/mm/yyyy, tìm phần ghi ngày cân xe hoặc ngày xuất phiếu)
 2. Biển số xe (dạng số xe ví dụ: 29C-123.45 hoặc 34C0852...)
-3. Tên lái xe (Tìm nhãn 'Lái xe' hoặc 'Họ tên lái xe' hoặc 'Tên khách hàng' nếu đó là tên người lái xe)
+
+Lưu ý: Không cần quét thông tin Lái xe hay bất cứ thông tin nào khác. Trường "laiXe" và "msl" để giá trị là chuỗi rỗng.
 
 Hãy trả về một đối tượng JSON khớp chính xác cấu trúc sau:
 {
   "ngay": "ngày cân dạng dd/mm/yyyy hoặc rỗng",
   "bienSo": "biển số xe hoặc rỗng",
-  "laiXe": "tên lái xe hoặc rỗng"
+  "laiXe": "",
+  "msl": ""
 }`;
     } else {
-      prompt = `Bạn là một chuyên gia OCR chính xác cao. Hãy đọc PHIẾU XUẤT KHO hoặc LỆNH XUẤT KHO trong ảnh.
+      prompt = `Bạn là một chuyên gia phân tích ảnh và trích xuất dữ liệu chính xác tuyệt đối. Hãy đọc PHIẾU XUẤT KHO hoặc LỆNH XUẤT KHO trong ảnh.
+
 Quy tắc nhận diện bắt buộc:
-1. SỐ PHIẾU CHỦ (Số phiếu của cả tờ Lệnh xuất kho):
-   - Hãy tìm nhãn "Số phiếu:" (thường nằm ở phần trên cùng, ngay dưới hoặc bên phải tiêu đề "LỆNH XUẤT KHO" hoặc bên cạnh ngày tháng).
-   - Lấy giá trị của Số phiếu này (thường được viết tay hoặc đóng dấu bằng mực đỏ/xanh, ví dụ: "... 02323").
-   - Chỉ trích xuất đúng 5 CHỮ SỐ CUỐI CÙNG của số phiếu chủ này (ví dụ: "02323").
-   - KHÔNG LẤY các mã sản phẩm trong bảng (như "120264TP12", "120271TP38") làm số phiếu.
 
-2. CÁC DÒNG SẢN PHẨM TRONG BẢNG:
-   - Quét qua bảng danh sách vật tư/hàng hóa. Với mỗi dòng, trích xuất:
-     - Tên sản phẩm: Tên của loại gạo hoặc vật tư (ví dụ: "Gạo Nếp Hoa Vàng DB túi 2Kg", "Gạo ST25 Bao 3Kg"...).
-     - Số lượng: Lấy số lượng tương ứng của dòng đó và bắt buộc bỏ đi 3 chữ số 0 ở cuối (ví dụ: "10,000" thành "10", "70,000" thành "70", "2,514,000" thành "2514").
+1. MÃ PHIẾU GÓC TRÊN CÙNG BÊN PHẢI (Số phiếu của cả tờ Lệnh xuất kho):
+   - Hãy tìm mã số phiếu nằm ở GÓC TRÊN CÙNG BÊN PHẢI của tờ phiếu.
+   - Chỉ trích xuất đúng 5 CHỮ SỐ CUỐI CÙNG của mã phiếu này (ví dụ: nếu góc trên phải ghi "Số phiếu: VG0126002604", hãy lấy "02604").
+   - KHÔNG LẤY các mã sản phẩm/mã vật tư trong bảng làm mã số phiếu.
 
-Hãy trả về một đối tượng JSON chứa danh sách các dòng hàng với cấu trúc (trong đó "soPhieu" của tất cả các dòng đều là số phiếu chủ 5 số cuối vừa trích xuất được ở bước 1):
+2. CÁC DÒNG VẬT TƯ/HÀNG HÓA TRONG BẢNG:
+   - Hãy quét qua bảng danh sách vật tư. Trích xuất thông tin từng dòng với các yêu cầu cực kỳ nghiêm ngặt sau:
+
+   a) TÊN VẬT TƯ (Tên sản phẩm):
+      - CHỈ QUẾT ĐÚNG TÊN của vật tư/hàng hóa.
+      - TUYỆT ĐỐI KHÔNG quét mã hàng/mã sản phẩm nằm trước tên hoặc các thông tin ở cột khác ngoài cột tên vật tư.
+      - Ví dụ: nếu dòng ghi "GA120272TP38 - Gạo Huyết rồng Phúc Thọ hộp 1kg" thì hãy loại bỏ hoàn toàn phần mã hàng phía trước "GA120272TP38 - " để chỉ lấy tên vật tư là "Gạo Huyết rồng Phúc Thọ hộp 1kg".
+      - Tương tự, nếu dòng ghi "GA120277TP25 - Gạo ST25+ Bao 3Kg" thì chỉ lấy "Gạo ST25+ Bao 3Kg".
+
+   b) SỐ LƯỢNG VÀ XỬ LÝ DÒNG BỊ GẠCH:
+      - Quét đúng số lượng thực tế tương ứng của dòng đó. Bắt buộc bỏ đi 3 chữ số 0 ở cuối nếu số lượng kết thúc bằng ba chữ số 0 (ví dụ: "15,000" thì lấy "15", "2,514,000" thành "2514").
+      - CHÚ Ý: Trong trường hợp số lượng hoặc cả dòng sản phẩm đó BỊ GẠCH ĐI (gạch ngang bằng bút mực, bút chì hoặc gạch in):
+        - Trường hợp 1: Dòng hàng hoặc số lượng bị gạch thẳng ngang qua mà KHÔNG viết thêm thông tin gì khác -> KHÔNG ĐỌC dòng đó vào, bỏ qua hoàn toàn không đưa dòng này vào kết quả JSON.
+          Ví dụ: Trong ảnh, các dòng "GA120277TP14 - Gạo ST25 Bao 3Kg", "GA120263TP13 - Ngọc Nương Gạo Lúa Tôm ST25 Bao 5Kg", và "GA120263TP10 - Ngọc Nương Gạo ST25 đặc sản 3kg - VNS" đều bị gạch ngang số lượng/tên và không có số viết tay ghi đè hay bổ sung ở bên cạnh -> KHÔNG đưa các dòng này vào kết quả.
+        - Trường hợp 2: Số lượng bị gạch thẳng nhưng trước đó hoặc bên cạnh/phía trên có chữ/số viết tay bổ sung (ví dụ: "TX 5", "TX 60", "TX 50", "TX 15", "TX 16", "TX 90") -> VẪN LẤY dòng vật tư đó, và lấy số lượng mới là số được bổ sung sau chữ "TX" hoặc số viết thêm (ví dụ: với "TX 5" lấy số lượng là "5", "TX 60" lấy số lượng là "60", "TX 90" lấy số lượng là "90").
+
+Hãy trả về một đối tượng JSON chứa danh sách các dòng hàng với cấu trúc sau:
 {
   "danhSach": [
     {
-      "soPhieu": "5 số cuối của Số phiếu chủ của lệnh xuất",
-      "tenSanPham": "tên sản phẩm nhận diện được trên dòng đó",
-      "soLuong": "số lượng sau khi bỏ đi 3 chữ số 0 ở cuối"
+      "soPhieu": "5 số cuối của mã phiếu ở góc trên cùng bên phải",
+      "tenSanPham": "Tên vật tư nhận dạng được (đã bỏ mã hàng ở đầu)",
+      "soLuong": "Số lượng sau khi đã xử lý bỏ 3 chữ số 0 ở cuối hoặc lấy số bổ sung nếu bị gạch"
     }
   ]
 }`;

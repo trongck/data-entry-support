@@ -179,7 +179,7 @@ export default function QuetPhieuLienTuc() {
       // Advance step to 'phieu-xuat' IMMEDIATELY so the user can start scanning export tickets
       setBuoc('phieu-xuat');
       setPhieuCanDangQuet(true);
-      setPhieuCanInfo({ ngay: 'Đang quét...', bienSo: 'Đang quét...', laiXe: 'Đang quét...' });
+      setPhieuCanInfo({ ngay: 'Đang quét...', bienSo: 'Đang quét...', laiXe: '' });
       setThongBao({ loai: 'thanh-cong', noiDung: 'Đang nhận dạng phiếu cân ngầm dưới nền...' });
 
       // Run fetching in background
@@ -196,11 +196,11 @@ export default function QuetPhieuLienTuc() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Lỗi nhận dạng phiếu cân');
         const kq = data.ketQua;
-        setPhieuCanInfo({ ngay: kq.ngay || '', bienSo: kq.bienSo || '', laiXe: kq.laiXe || '' });
+        setPhieuCanInfo({ ngay: kq.ngay || '', bienSo: kq.bienSo || '', laiXe: '' });
         setThongBao({ loai: 'thanh-cong', noiDung: `✅ Đọc xong phiếu cân: ${kq.bienSo || '?'}` });
       })
       .catch(err => {
-        setPhieuCanInfo({ ngay: 'Lỗi quét', bienSo: 'Lỗi quét', laiXe: 'Lỗi quét' });
+        setPhieuCanInfo({ ngay: 'Lỗi quét', bienSo: 'Lỗi quét', laiXe: '' });
         setThongBao({ loai: 'loi', noiDung: `❌ Lỗi đọc phiếu cân: ${err.message}` });
       })
       .finally(() => {
@@ -307,15 +307,15 @@ export default function QuetPhieuLienTuc() {
   // === XUẤT EXCEL ===
   const xuatExcel = () => {
     if (ketQuaList.length === 0) return;
-    const cols = ['Ngày', 'Biển số xe', 'Lái xe', 'Số phiếu', 'Tên sản phẩm', 'Số lượng (Kg)', 'MSL'];
+    const cols = ['Ngày', 'Biển số xe', 'Lái xe', 'Số phiếu', 'Số lượng (Kg)', 'MSL', 'Tên vật tư'];
     const rows = ketQuaList.map(d => ({
       'Ngày': d.ngay,
       'Biển số xe': d.bienSo,
       'Lái xe': d.laiXe,
       'Số phiếu': d.soPhieu,
-      'Tên sản phẩm': d.tenSanPham,
       'Số lượng (Kg)': d.soLuong,
-      'MSL': d.msl
+      'MSL': d.msl,
+      'Tên vật tư': d.tenSanPham
     }));
     xuatExcelBangDauRa(rows, cols);
     setThongBao({ loai: 'thanh-cong', noiDung: `Xuất ${rows.length} dòng Excel thành công!` });
@@ -540,11 +540,11 @@ export default function QuetPhieuLienTuc() {
                 <th className="w-10 border border-[#E5E7EB] px-2 py-2.5 text-center font-bold text-gray-500">#</th>
                 <th className="border border-[#E5E7EB] px-3 py-2.5 text-left font-bold text-gray-700 w-28">Ngày</th>
                 <th className="border border-[#E5E7EB] px-3 py-2.5 text-left font-bold text-gray-700 w-28">Biển số xe</th>
-                <th className="border border-[#E5E7EB] px-3 py-2.5 text-left font-bold text-gray-700">Lái xe</th>
+                <th className="border border-[#E5E7EB] px-3 py-2.5 text-left font-bold text-gray-700 w-32">Lái xe</th>
                 <th className="border border-[#E5E7EB] px-3 py-2.5 text-left font-bold text-gray-700 w-24">Số phiếu</th>
-                <th className="border border-[#E5E7EB] px-3 py-2.5 text-left font-bold text-gray-700 w-36">Tên sản phẩm</th>
                 <th className="border border-[#E5E7EB] px-3 py-2.5 text-center font-bold text-gray-700 w-24">Số lượng</th>
                 <th className="border border-[#E5E7EB] px-3 py-2.5 text-center font-bold text-amber-600 w-24 bg-amber-50">MSL</th>
+                <th className="border border-[#E5E7EB] px-3 py-2.5 text-left font-bold text-gray-700">Tên vật tư</th>
                 <th className="w-10 border border-[#E5E7EB] px-2 py-2.5 text-center font-bold text-gray-500">Xóa</th>
               </tr>
             </thead>
@@ -559,16 +559,49 @@ export default function QuetPhieuLienTuc() {
               ) : ketQuaList.map((d, i) => (
                 <tr key={i} className="hover:bg-blue-50/30 transition-colors">
                   <td className="border border-[#E5E7EB] text-center font-bold text-gray-400 bg-[#F8F9FA]">{i + 1}</td>
-                  {(['ngay', 'bienSo', 'laiXe', 'soPhieu', 'tenSanPham', 'soLuong'] as const).map(field => (
-                    <td key={field} className="border border-[#E5E7EB] px-1">
-                      <input value={d[field]} onChange={e => suaDongKetQua(i, field, e.target.value)}
-                        className="w-full px-2 py-1.5 bg-transparent outline-none text-xs focus:bg-blue-50" />
-                    </td>
-                  ))}
+                  
+                  {/* Cột Ngày */}
+                  <td className="border border-[#E5E7EB] px-1">
+                    <input value={d.ngay} onChange={e => suaDongKetQua(i, 'ngay', e.target.value)}
+                      className="w-full px-2 py-1.5 bg-transparent outline-none text-xs focus:bg-blue-50" />
+                  </td>
+
+                  {/* Cột Biển số xe */}
+                  <td className="border border-[#E5E7EB] px-1">
+                    <input value={d.bienSo} onChange={e => suaDongKetQua(i, 'bienSo', e.target.value)}
+                      className="w-full px-2 py-1.5 bg-transparent outline-none text-xs focus:bg-blue-50" />
+                  </td>
+
+                  {/* Cột Lái xe */}
+                  <td className="border border-[#E5E7EB] px-1">
+                    <input value={d.laiXe} onChange={e => suaDongKetQua(i, 'laiXe', e.target.value)}
+                      className="w-full px-2 py-1.5 bg-transparent outline-none text-xs focus:bg-blue-50" placeholder="(Trống)" />
+                  </td>
+
+                  {/* Cột Số phiếu */}
+                  <td className="border border-[#E5E7EB] px-1">
+                    <input value={d.soPhieu} onChange={e => suaDongKetQua(i, 'soPhieu', e.target.value)}
+                      className="w-full px-2 py-1.5 bg-transparent outline-none text-xs focus:bg-blue-50" />
+                  </td>
+
+                  {/* Cột Số lượng */}
+                  <td className="border border-[#E5E7EB] px-1">
+                    <input value={d.soLuong} onChange={e => suaDongKetQua(i, 'soLuong', e.target.value)}
+                      className="w-full px-2 py-1.5 bg-transparent outline-none text-xs text-center focus:bg-blue-50" />
+                  </td>
+
+                  {/* Cột MSL */}
                   <td className="border border-[#E5E7EB] px-1 bg-amber-50/50">
                     <input value={d.msl} onChange={e => suaDongKetQua(i, 'msl', e.target.value)}
                       className="w-full px-2 py-1.5 bg-transparent outline-none text-xs text-center font-bold focus:bg-amber-100" placeholder="Điền MSL" />
                   </td>
+
+                  {/* Cột Tên vật tư (cuối cùng) */}
+                  <td className="border border-[#E5E7EB] px-1">
+                    <input value={d.tenSanPham} onChange={e => suaDongKetQua(i, 'tenSanPham', e.target.value)}
+                      className="w-full px-2 py-1.5 bg-transparent outline-none text-xs focus:bg-blue-50" />
+                  </td>
+
                   <td className="border border-[#E5E7EB] text-center bg-[#F8F9FA]">
                     <button onClick={() => xoaDongKetQua(i)} className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition">
                       <Trash2 className="w-3.5 h-3.5 mx-auto" />
