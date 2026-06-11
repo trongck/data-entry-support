@@ -69,11 +69,13 @@ Quy tắc nhận diện bắt buộc:
       - Ví dụ: nếu dòng ghi dạng "MÃ_HÀNG - TÊN_VẬT_TƯ" (ví dụ: "GA120272TP38 - Gạo Huyết rồng...") hoặc "MÃ_HÀNG TÊN_VẬT_TƯ" (ví dụ: "120264TP12 Gạo Nếp...") thì hãy loại bỏ hoàn toàn phần mã hàng phía trước (kể cả dấu gạch ngang "-") để chỉ lấy phần tên vật tư (ví dụ: "Gạo Huyết rồng..." hoặc "Gạo Nếp...").
 
    b) SỐ LƯỢNG VÀ XỬ LÝ DÒNG BỊ GẠCH:
-      - Quét đúng số lượng thực tế tương ứng của dòng đó. Bắt buộc bỏ đi 3 chữ số 0 ở cuối nếu số lượng kết thúc bằng ba chữ số 0 (ví dụ: "15,000" thì lấy "15", "2,514,000" thành "2514").
-      - CHÚ Ý: Trong trường hợp số lượng hoặc cả dòng sản phẩm đó BỊ GẠCH ĐI (gạch ngang bằng bút mực, bút chì hoặc gạch in):
-        - Trường hợp 1: Dòng hàng hoặc số lượng bị gạch thẳng ngang qua mà KHÔNG viết thêm thông tin gì khác -> KHÔNG ĐỌC dòng đó vào, bỏ qua hoàn toàn không đưa dòng này vào kết quả JSON.
-          Ví dụ: Nếu một dòng vật tư bất kỳ có tên hoặc số lượng bị gạch bỏ bằng nét vẽ và không có bất kỳ con số hay chữ viết tay bổ sung nào ở bên cạnh -> Hãy bỏ qua hoàn toàn dòng đó.
-        - Trường hợp 2: Số lượng bị gạch thẳng nhưng trước đó hoặc bên cạnh/phía trên có chữ/số viết tay bổ sung (ví dụ: ghi "TX 5", "TX 60", "TX 120" hoặc chỉ ghi số như "120" viết đè/bên cạnh) -> VẪN LẤY dòng vật tư đó, và lấy số lượng mới là con số được viết tay bổ sung (ví dụ: lấy số lượng là "5", "60", hoặc "120" tương ứng).
+      - Quét đúng số lượng thực tế tương ứng của dòng đó. Bắt buộc bỏ đi 3 chữ số 0 ở cuối nếu số lượng kết thúc bằng ba chữ số 0 (ví dụ: "15,000" thì lấy "15", "1,030,000" thành "1030").
+      - CHÚ Ý CỰC KỲ QUAN TRỌNG VỀ GẠCH HỦY VÀ GHI ĐÈ:
+        - Quy tắc 1 (Gạch bỏ hoàn toàn): Nếu một dòng vật tư có số lượng bị gạch ngang và KHÔNG có ghi chú "TX [số]" viết tay bên cạnh -> BẮT BUỘC bỏ qua dòng đó, không đưa vào kết quả JSON.
+          Ví dụ: Trong ảnh mẫu, các dòng có số lượng "2,640,000" và "1,785,000" bị gạch ngang và không có chữ TX viết tay bên cạnh -> Bỏ qua hoàn toàn các dòng này.
+        - Quy tắc 2 (Gạch bỏ có thay thế): Nếu số lượng bị gạch ngang nhưng có ghi chú "TX [số]" viết tay bên cạnh (ví dụ: "TX 5", "TX 60", "TX 50", "TX 90"...) -> VẪN LẤY dòng đó và cập nhật số lượng mới là con số viết sau chữ "TX" (ví dụ: "TX 5" lấy là "5", "TX 60" lấy là "60", "TX 90" lấy là "90").
+        - Quy tắc 3 (Không bị gạch): Nếu số lượng của dòng hàng đó hoàn toàn không bị gạch ngang (ví dụ: dòng có số lượng "1,030,000" và "15,000" không bị nét bút gạch ngang qua) -> VẪN LẤY dòng đó bình thường với số lượng gốc đã rút gọn 3 số 0 (ví dụ: "1,030,000" lấy là "1030", "15,000" lấy là "15").
+        - ĐỐI CHIẾU DÓNG HÀNG CHÍNH XÁC (Alignment): Hãy đối chiếu hàng ngang thật cẩn thận từ Cột Tên vật tư sang Cột Số lượng để khớp đúng chữ viết tay của hàng nào vào hàng đó, tuyệt đối không dóng lệch hàng (không lấy nhầm chữ viết tay của hàng này gán cho hàng khác).
 
 Hãy trả về một đối tượng JSON chứa danh sách các dòng hàng với cấu trúc sau:
 {
