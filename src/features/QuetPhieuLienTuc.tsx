@@ -245,7 +245,7 @@ export default function QuetPhieuLienTuc() {
         const ds = kq.danhSach || [kq];
         const newItems = ds.map((item: any) => {
           let sl = String(item.soLuong || '').trim();
-          if (sl.endsWith('000')) sl = sl.slice(0, -3);
+          // Số lượng đã được rút gọn 3 số 0 từ API route phía server, không rút lại ở đây tránh mất số hàng nghìn (ví dụ 1000 bị rút tiếp thành 1)
           
           let sp = String(item.soPhieu || '').trim();
           if (sp.length > 5) sp = sp.slice(-5);

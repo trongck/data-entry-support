@@ -68,8 +68,11 @@ Quy tắc nhận diện bắt buộc:
       - TUYỆT ĐỐI KHÔNG quét mã hàng/mã sản phẩm nằm trước tên hoặc các thông tin ở cột khác ngoài cột tên vật tư.
       - Ví dụ: nếu dòng ghi dạng "MÃ_HÀNG - TÊN_VẬT_TƯ" (ví dụ: "GA120272TP38 - Gạo Huyết rồng...") hoặc "MÃ_HÀNG TÊN_VẬT_TƯ" (ví dụ: "120264TP12 Gạo Nếp...") thì hãy loại bỏ hoàn toàn phần mã hàng phía trước (kể cả dấu gạch ngang "-") để chỉ lấy phần tên vật tư (ví dụ: "Gạo Huyết rồng..." hoặc "Gạo Nếp...").
 
-   b) SỐ LƯỢNG VÀ XỬ LÝ DÒNG BỊ GẠCH:
-      - Quét đúng số lượng thực tế tương ứng của dòng đó. Bắt buộc bỏ đi 3 chữ số 0 ở cuối nếu số lượng kết thúc bằng ba chữ số 0 (ví dụ: "15,000" thì lấy "15", "1,030,000" thành "1030").
+    b) SỐ LƯỢNG VÀ XỬ LÝ DÒNG BỊ GẠCH:
+      - Trích xuất số lượng của dòng đó theo thuật toán 3 bước nghiêm ngặt sau để tránh sai số phần nghìn/triệu:
+        * Bước 1: Lấy chuỗi số lượng gốc từ bảng (ví dụ: "2.640,000", "1.000,000", "600,000" hoặc "15,000").
+        * Bước 2: Loại bỏ hoàn toàn tất cả các dấu chấm (.) và dấu phẩy (,) khỏi chuỗi đó để thu được chuỗi số thuần túy (ví dụ: "2.640,000" thành "2640000", "1.000,000" thành "1000000", "600,000" thành "600000", "15,000" thành "15000").
+        * Bước 3: Nếu chuỗi số thuần túy này kết thúc bằng đúng 3 chữ số 0 ("000"), hãy xóa bỏ đúng 3 chữ số 0 đó ở cuối (ví dụ: "2640000" thành "2640", "1000000" thành "1000", "600000" thành "600", "15000" thành "15"). Tuyệt đối không được rút gọn thêm bất kỳ chữ số nào khác (không được biến "1000" thành "1").
       - CHÚ Ý CỰC KỲ QUAN TRỌNG VỀ GẠCH HỦY VÀ GHI ĐÈ:
         - Quy tắc 1 (Gạch bỏ hoàn toàn): Nếu một dòng vật tư có số lượng bị gạch ngang và KHÔNG có ghi chú "TX [số]" viết tay bên cạnh -> BẮT BUỘC bỏ qua dòng đó, không đưa vào kết quả JSON.
           Ví dụ: Trong ảnh mẫu, các dòng có số lượng "2,640,000" và "1,785,000" bị gạch ngang và không có chữ TX viết tay bên cạnh -> Bỏ qua hoàn toàn các dòng này.
