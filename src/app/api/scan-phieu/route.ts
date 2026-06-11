@@ -64,15 +64,14 @@ Quy tắc nhận diện bắt buộc:
    a) TÊN VẬT TƯ (Tên sản phẩm):
       - CHỈ QUẾT ĐÚNG TÊN của vật tư/hàng hóa.
       - TUYỆT ĐỐI KHÔNG quét mã hàng/mã sản phẩm nằm trước tên hoặc các thông tin ở cột khác ngoài cột tên vật tư.
-      - Ví dụ: nếu dòng ghi "GA120272TP38 - Gạo Huyết rồng Phúc Thọ hộp 1kg" thì hãy loại bỏ hoàn toàn phần mã hàng phía trước "GA120272TP38 - " để chỉ lấy tên vật tư là "Gạo Huyết rồng Phúc Thọ hộp 1kg".
-      - Tương tự, nếu dòng ghi "GA120277TP25 - Gạo ST25+ Bao 3Kg" thì chỉ lấy "Gạo ST25+ Bao 3Kg".
+      - Ví dụ: nếu dòng ghi dạng "MÃ_HÀNG - TÊN_VẬT_TƯ" (ví dụ: "GA120272TP38 - Gạo Huyết rồng...") hoặc "MÃ_HÀNG TÊN_VẬT_TƯ" (ví dụ: "120264TP12 Gạo Nếp...") thì hãy loại bỏ hoàn toàn phần mã hàng phía trước (kể cả dấu gạch ngang "-") để chỉ lấy phần tên vật tư (ví dụ: "Gạo Huyết rồng..." hoặc "Gạo Nếp...").
 
    b) SỐ LƯỢNG VÀ XỬ LÝ DÒNG BỊ GẠCH:
       - Quét đúng số lượng thực tế tương ứng của dòng đó. Bắt buộc bỏ đi 3 chữ số 0 ở cuối nếu số lượng kết thúc bằng ba chữ số 0 (ví dụ: "15,000" thì lấy "15", "2,514,000" thành "2514").
       - CHÚ Ý: Trong trường hợp số lượng hoặc cả dòng sản phẩm đó BỊ GẠCH ĐI (gạch ngang bằng bút mực, bút chì hoặc gạch in):
         - Trường hợp 1: Dòng hàng hoặc số lượng bị gạch thẳng ngang qua mà KHÔNG viết thêm thông tin gì khác -> KHÔNG ĐỌC dòng đó vào, bỏ qua hoàn toàn không đưa dòng này vào kết quả JSON.
-          Ví dụ: Trong ảnh, các dòng "GA120277TP14 - Gạo ST25 Bao 3Kg", "GA120263TP13 - Ngọc Nương Gạo Lúa Tôm ST25 Bao 5Kg", và "GA120263TP10 - Ngọc Nương Gạo ST25 đặc sản 3kg - VNS" đều bị gạch ngang số lượng/tên và không có số viết tay ghi đè hay bổ sung ở bên cạnh -> KHÔNG đưa các dòng này vào kết quả.
-        - Trường hợp 2: Số lượng bị gạch thẳng nhưng trước đó hoặc bên cạnh/phía trên có chữ/số viết tay bổ sung (ví dụ: "TX 5", "TX 60", "TX 50", "TX 15", "TX 16", "TX 90") -> VẪN LẤY dòng vật tư đó, và lấy số lượng mới là số được bổ sung sau chữ "TX" hoặc số viết thêm (ví dụ: với "TX 5" lấy số lượng là "5", "TX 60" lấy số lượng là "60", "TX 90" lấy số lượng là "90").
+          Ví dụ: Nếu một dòng vật tư bất kỳ có tên hoặc số lượng bị gạch bỏ bằng nét vẽ và không có bất kỳ con số hay chữ viết tay bổ sung nào ở bên cạnh -> Hãy bỏ qua hoàn toàn dòng đó.
+        - Trường hợp 2: Số lượng bị gạch thẳng nhưng trước đó hoặc bên cạnh/phía trên có chữ/số viết tay bổ sung (ví dụ: ghi "TX 5", "TX 60", "TX 120" hoặc chỉ ghi số như "120" viết đè/bên cạnh) -> VẪN LẤY dòng vật tư đó, và lấy số lượng mới là con số được viết tay bổ sung (ví dụ: lấy số lượng là "5", "60", hoặc "120" tương ứng).
 
 Hãy trả về một đối tượng JSON chứa danh sách các dòng hàng với cấu trúc sau:
 {

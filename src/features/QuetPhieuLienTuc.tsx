@@ -183,7 +183,8 @@ export default function QuetPhieuLienTuc() {
       setThongBao({ loai: 'thanh-cong', noiDung: 'Đang nhận dạng phiếu cân ngầm dưới nền...' });
 
       // Run fetching in background
-      fetch('/api/scan-phieu', {
+      console.log('Sending API scan-phieu with loaiPhieu: phieu-can');
+      fetch(`/api/scan-phieu?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -194,6 +195,7 @@ export default function QuetPhieuLienTuc() {
       })
       .then(async res => {
         const data = await res.json();
+        console.log('API response for phieu-can:', data);
         if (!res.ok) throw new Error(data.error || 'Lỗi nhận dạng phiếu cân');
         const kq = data.ketQua;
         setPhieuCanInfo({ ngay: kq.ngay || '', bienSo: kq.bienSo || '', laiXe: '' });
@@ -225,7 +227,8 @@ export default function QuetPhieuLienTuc() {
       setThongBao({ loai: 'thanh-cong', noiDung: 'Đang nhận dạng phiếu xuất ngầm dưới nền...' });
 
       // Run fetching in background
-      fetch('/api/scan-phieu', {
+      console.log('Sending API scan-phieu with loaiPhieu: phieu-xuat');
+      fetch(`/api/scan-phieu?t=${Date.now()}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -236,6 +239,7 @@ export default function QuetPhieuLienTuc() {
       })
       .then(async res => {
         const data = await res.json();
+        console.log('API response for phieu-xuat:', data);
         if (!res.ok) throw new Error(data.error || 'Lỗi nhận dạng phiếu xuất');
         const kq = data.ketQua;
         const ds = kq.danhSach || [kq];
